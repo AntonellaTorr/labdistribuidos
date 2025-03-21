@@ -2,23 +2,21 @@ import java.net.*;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class sp {
     private static final int PUERTO = 6791;
-    private static final Map<String, String> pronosticos = new HashMap<>();
-
-    static {
-        pronosticos.put("01-03-2025", "Soleado con 30 grados.");
-        pronosticos.put("02-03-2025", "Lluvias dispersas con 18 grados.");
-        pronosticos.put("03-03-2025", "Nublado con 22 grados.");
-        pronosticos.put("04-03-2025", "Soleado con 25 grados.");
-        pronosticos.put("05-03-2025", "Tormentas con 20 grados.");
-        pronosticos.put("06-03-2025", "Soleado con 28 grados.");
-        pronosticos.put("07-03-2025", "Lluvias ligeras con 21 grados.");
-        pronosticos.put("08-03-2025", "Parcialmente nublado con 24 grados.");
-        pronosticos.put("09-03-2025", "Soleado con 27 grados.");
-        pronosticos.put("10-03-2025", "Nublado con posibilidad de lluvias, 19 grados.");
-    }
+    private static final String[] pronosticos = {
+         "Soleado con 30 grados.",
+         "Lluvias dispersas con 18 grados.",
+         "Nublado con 22 grados.",
+         "Soleado con 25 grados.",
+         "Tormentas con 20 grados.",
+         "Lluvias ligeras con 21 grados.",
+         "Parcialmente nublado con 24 grados.",
+         "Soleado con 27 grados.",
+         "Nublado con posibilidad de lluvias, 19 grados."
+    };
 
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(PUERTO)) {
@@ -45,10 +43,13 @@ public class sp {
             try (DataInputStream in = new DataInputStream(socket.getInputStream());
                  DataOutputStream out = new DataOutputStream(socket.getOutputStream())) {
 
-                String fecha = in.readUTF().trim();
-
                 // Buscar el pronóstico de clima según la fecha
-                String respuesta = pronosticos.getOrDefault(fecha, "Fecha no encontrada.");
+                String respuesta = pronosticos[ThreadLocalRandom.current().nextInt(0, 10)];//pronosticos.getOrDefault(fecha, "Fecha no encontrada.");
+                try {
+                    Thread.sleep(ThreadLocalRandom.current().nextInt(2000, 5000));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 out.writeUTF("El clima para la fecha ingresada sera: "+respuesta);
             } catch (IOException e) {
                 System.out.println("Error en la comunicación con el cliente: " + e.getMessage());

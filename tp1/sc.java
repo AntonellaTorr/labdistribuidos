@@ -2,6 +2,7 @@ import java.net.*;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class sc {
     private static final int PUERTO = 6789;
@@ -35,22 +36,33 @@ public class sc {
 
                 // Leer la consulta del cliente
                 String consulta = in.readUTF().trim();
-                System.out.println(consulta);
+                System.out.println("Sirviendo consulta "+consulta);
                 String respuesta;
+                boolean[] deCache = {true};
                 if (esFecha(consulta)) {
                     // Si es una fecha, consultar a SP
                     synchronized (cacheClima) {
-                        respuesta = cacheClima.computeIfAbsent(consulta, fecha -> consultarServidor("localhost", 6791, fecha));
+                        respuesta = cacheClima.computeIfAbsent(consulta, fecha -> {deCache[0]=false;return consultarServidor("localhost", 6791, fecha);});
                     }
                 } else {
+                    
                     // Si no es una fecha, consultar a SH (se asume que es un signo zodiacal)
                     synchronized (cacheHoroscopo) {
-                        respuesta = cacheHoroscopo.computeIfAbsent(consulta.toLowerCase(), signo -> consultarServidor("localhost", 6790, signo));
+                        respuesta = cacheHoroscopo.computeIfAbsent(consulta.toLowerCase(), signo -> {deCache[0]=false;return consultarServidor("localhost", 6790, signo);});
                     }
                 }
-
+                if (deCache[0]){
+                    respuesta += "- de cache";
+                }
+                try {
+                    Thread.sleep(ThreadLocalRandom.current().nextInt(5000, 10000));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 // Enviar la respuesta al cliente
                 out.writeUTF(respuesta);
+                System.out.println("Fin de consulta "+consulta);
+
             } catch (IOException e) {
                 System.out.println("Error en la comunicacion con el cliente: " + e.getMessage());
             } finally {

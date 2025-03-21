@@ -2,6 +2,7 @@ import java.net.*;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class sh {
     private static final int PUERTO = 6790;
@@ -52,6 +53,11 @@ public class sh {
                 // Respuesta para el signo solicitado
                 System.out.println("SIGNO INGRESADO" +signo);
                 String respuesta = horoscopos.getOrDefault(signo, "Signo no encontrado.");
+                try {
+                    Thread.sleep(ThreadLocalRandom.current().nextInt(2000, 5000));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 out.writeUTF("Prediccion para " + signo + ": " + respuesta);
             } catch (IOException e) {
                 System.out.println("Error en la comunicacion con el cliente: " + e.getMessage());
