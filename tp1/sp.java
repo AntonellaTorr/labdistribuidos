@@ -43,8 +43,12 @@ public class sp {
             try (DataInputStream in = new DataInputStream(socket.getInputStream());
                  DataOutputStream out = new DataOutputStream(socket.getOutputStream())) {
 
+
+                String dia = in.readUTF().trim().toLowerCase().substring(0, 2);
+                int index = Integer.parseInt(dia) % pronosticos.length;
+
                 // Buscar el pronóstico de clima según la fecha
-                String respuesta = pronosticos[ThreadLocalRandom.current().nextInt(0, 10)];//pronosticos.getOrDefault(fecha, "Fecha no encontrada.");
+                String respuesta = pronosticos[index];//pronosticos.getOrDefault(fecha, "Fecha no encontrada.");
                 try {
                     Thread.sleep(ThreadLocalRandom.current().nextInt(2000, 5000));
                 } catch (InterruptedException e) {

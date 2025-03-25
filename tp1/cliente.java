@@ -6,7 +6,7 @@ public class cliente {
     public static void main(String[] args) {
         // Verificar que se pasen los parámetros necesarios
         if (args.length < 2) {
-            System.out.println("Uso: java Cliente <host> <puerto>");
+            System.out.println("Uso: java cliente <host> <puerto>");
             return;
         }
 
