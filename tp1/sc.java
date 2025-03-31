@@ -27,32 +27,47 @@ public class sc {
         public ClienteHandler(Socket socket) {
             this.socket = socket;
         }
-
         @Override
         public void run() {
             try (DataInputStream in = new DataInputStream(socket.getInputStream());
                  DataOutputStream out = new DataOutputStream(socket.getOutputStream())) {
-
+        
                 // Leer la consulta del cliente
                 String consulta = in.readUTF().trim();
-                System.out.println(consulta);
-                String respuesta;
-                if (esFecha(consulta)) {
-                    // Si es una fecha, consultar a SP
-                    synchronized (cacheClima) {
-                        respuesta = cacheClima.computeIfAbsent(consulta, fecha -> consultarServidor("localhost", 6791, fecha));
-                    }
-                } else {
-                    // Si no es una fecha, consultar a SH (se asume que es un signo zodiacal)
-                    synchronized (cacheHoroscopo) {
-                        respuesta = cacheHoroscopo.computeIfAbsent(consulta.toLowerCase(), signo -> consultarServidor("localhost", 6790, signo));
+                System.out.println("Consulta recibida: " + consulta);
+        
+                String respuestaClima = null;
+                String respuestaHoroscopo = null;
+        
+                // Dividir la consulta en palabras
+                String[] partes = consulta.split("\\s+");
+        
+                for (String parte : partes) {
+                    if (esFecha(parte)) {
+                        synchronized (cacheClima) {
+                            respuestaClima = cacheClima.computeIfAbsent(parte, fecha -> consultarServidor("localhost", 6791, fecha));
+                        }
+                    } else {
+                        synchronized (cacheHoroscopo) {
+                            respuestaHoroscopo = cacheHoroscopo.computeIfAbsent(parte.toLowerCase(), signo -> consultarServidor("localhost", 6790, signo));
+                        }
                     }
                 }
-
+        
+                // Construir la respuesta según los datos obtenidos
+                StringBuilder respuesta = new StringBuilder();
+                if (respuestaClima != null) {
+                    respuesta.append("Clima: ").append(respuestaClima).append("\n");
+                }
+                if (respuestaHoroscopo != null) {
+                    respuesta.append("Horóscopo: ").append(respuestaHoroscopo);
+                }
+        
                 // Enviar la respuesta al cliente
-                out.writeUTF(respuesta);
+                out.writeUTF(respuesta.toString().trim());
+        
             } catch (IOException e) {
-                System.out.println("Error en la comunicacion con el cliente: " + e.getMessage());
+                System.out.println("Error en la comunicación con el cliente: " + e.getMessage());
             } finally {
                 try {
                     socket.close();
@@ -61,6 +76,7 @@ public class sc {
                 }
             }
         }
+        
         private boolean esFecha(String consulta) {
             return consulta.matches("\\d{2}-\\d{2}-\\d{4}"); // Verifica formato DD-MM-YYYY
         }
