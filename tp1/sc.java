@@ -28,12 +28,11 @@ public class sc {
         public ClienteHandler(Socket socket) {
             this.socket = socket;
         }
-
         @Override
         public void run() {
             try (DataInputStream in = new DataInputStream(socket.getInputStream());
                  DataOutputStream out = new DataOutputStream(socket.getOutputStream())) {
-
+        
                 // Leer la consulta del cliente
                 String consulta = in.readUTF().trim();
                 System.out.println("Sirviendo consulta "+consulta);
@@ -64,7 +63,7 @@ public class sc {
                 System.out.println("Fin de consulta "+consulta);
 
             } catch (IOException e) {
-                System.out.println("Error en la comunicacion con el cliente: " + e.getMessage());
+                System.out.println("Error en la comunicación con el cliente: " + e.getMessage());
             } finally {
                 try {
                     socket.close();
@@ -73,6 +72,7 @@ public class sc {
                 }
             }
         }
+        
         private boolean esFecha(String consulta) {
             return consulta.matches("\\d{2}-\\d{2}-\\d{4}"); // Verifica formato DD-MM-YYYY
         }
