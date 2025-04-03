@@ -2,7 +2,6 @@ import java.net.*;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class sc {
     private static final int PUERTO = 6789;
@@ -35,33 +34,48 @@ public class sc {
         
                 // Leer la consulta del cliente
                 String consulta = in.readUTF().trim();
-                System.out.println("Sirviendo consulta "+consulta);
-                String respuesta;
-                boolean[] deCache = {true};
-                if (esFecha(consulta)) {
-                    // Si es una fecha, consultar a SP
-                    synchronized (cacheClima) {
-                        respuesta = cacheClima.computeIfAbsent(consulta, fecha -> {deCache[0]=false;return consultarServidor("localhost", 6791, fecha);});
-                    }
-                } else {
-                    
-                    // Si no es una fecha, consultar a SH (se asume que es un signo zodiacal)
-                    synchronized (cacheHoroscopo) {
-                        respuesta = cacheHoroscopo.computeIfAbsent(consulta.toLowerCase(), signo -> {deCache[0]=false;return consultarServidor("localhost", 6790, signo);});
-                    }
-                }
-                if (deCache[0]){
-                    respuesta += "- de cache";
-                }
-                try {
-                    Thread.sleep(ThreadLocalRandom.current().nextInt(5000, 10000));
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                // Enviar la respuesta al cliente
-                out.writeUTF(respuesta);
-                System.out.println("Fin de consulta "+consulta);
+                System.out.println("Consulta recibida: " + consulta);
+        
+                String respuestaClima = "";
+                String respuestaHoroscopo = "";
+        
+                // Dividir la consulta en palabras
+                String[] partes = consulta.split("\\s+");
+        
+                for (String parte : partes) {
+                    if (esFecha(parte)) {
+                        synchronized (cacheClima) {
+                            if (cacheClima.containsKey(parte)) {
+                                respuestaClima = " (Respuesta cacheada)";
+                            }
+                            respuestaClima = cacheClima.computeIfAbsent(parte, fecha -> consultarServidor("localhost", 6791, fecha)) + respuestaClima;
+                        
 
+                        }
+                    } else {
+                        synchronized (cacheHoroscopo) {
+                                                        
+                            if (cacheHoroscopo.containsKey(parte.toLowerCase())) {
+                                respuestaHoroscopo = " (Respuesta cacheada)";
+                            }
+                            respuestaHoroscopo = cacheHoroscopo.computeIfAbsent(parte.toLowerCase(), signo -> consultarServidor("localhost", 6790, signo)) + respuestaHoroscopo;
+
+                        }
+                    }
+                }
+        
+                // Construir la respuesta según los datos obtenidos
+                StringBuilder respuesta = new StringBuilder();
+                if (respuestaClima != null) {
+                    respuesta.append("Clima: ").append(respuestaClima).append("\n");
+                }
+                if (respuestaHoroscopo != null) {
+                    respuesta.append("Horóscopo: ").append(respuestaHoroscopo);
+                }
+        
+                // Enviar la respuesta al cliente
+                out.writeUTF(respuesta.toString().trim());
+        
             } catch (IOException e) {
                 System.out.println("Error en la comunicación con el cliente: " + e.getMessage());
             } finally {
