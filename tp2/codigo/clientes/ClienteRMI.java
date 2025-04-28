@@ -1,7 +1,9 @@
+package clientes;
 import interfaces.ServidorCentralService;
 
 import java.rmi.Naming;
 import java.util.Scanner;
+
 
 public class ClienteRMI {
     public static void main(String[] args) {
